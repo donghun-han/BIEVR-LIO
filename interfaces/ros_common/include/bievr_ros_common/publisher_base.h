@@ -38,7 +38,7 @@ class PublisherBase {
   // "/bievr_lio/odometry"). Absolute topics (leading '/') are left untouched.
   PublisherBase(Handle handle, std::shared_ptr<Pipeline> pipeline, const std::string& ns = "")
       : backend_(std::move(handle)), ns_(ns) {
-    registerTypes<Pointcloud, IntensityPointcloud, Odometry, V3>(pipeline);
+    registerTypes<Pointcloud, IntensityPointcloud, Odometry, Pose, V3>(pipeline);
   }
   virtual ~PublisherBase() = default;
 
@@ -88,6 +88,16 @@ class PublisherBase {
     transform_msg.child_frame_id = child_frame;
     transformToMsg(odometry.pose, transform_msg.transform);
     backend_.sendTransform(transform_msg);
+    return true;
+  }
+
+  bool publishImpl(const Pose& pose, const Header& header, const std::string& topic,
+                   const std::string& /*child_frame*/) {
+    typename Backend::PoseStamped msg;
+    if (!getOrAdvertise<typename Backend::PoseStamped>(topic)) return false;
+    headerToMsg(header, msg.header);
+    transformToMsg(pose.pose, msg.pose);
+    publishers_[topic].publish(msg);
     return true;
   }
 

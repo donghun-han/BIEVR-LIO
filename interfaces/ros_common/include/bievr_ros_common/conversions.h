@@ -544,8 +544,12 @@ void vecToMsg(const V3& vec, Vec3MsgT& msg) {
 #ifdef BIEVR_WITH_LIVOX  // ROS2 has only the gen2 driver (livox_ros_driver2)
 inline bool msgToPointcloud(const livox_ros_driver2::msg::CustomMsg& pointcloud_msg,
                             StampedIntensityPointcloud& stamped_pointcloud) {
-  return conv_detail::livoxToStampedIntensity(pointcloud_msg, pointcloud_msg.timebase,
-                                              "00_conversion_livox2", stamped_pointcloud);
+  // Original line:
+  // return conv_detail::livoxToStampedIntensity(pointcloud_msg, pointcloud_msg.timebase,
+  //                                             "00_conversion_livox2", stamped_pointcloud);
+  // New line:
+    return conv_detail::livoxToStampedIntensity(pointcloud_msg, conv_detail::stampToNs(pointcloud_msg.header.stamp),
+                                                "00_conversion_livox2", stamped_pointcloud);
 }
 #endif
 #else                    // BIEVR_ROS_COMMON_ROS1

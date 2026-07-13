@@ -3,6 +3,7 @@
 
 #include <tf2_ros/transform_broadcaster.h>
 
+#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
 #include <memory>
@@ -55,6 +56,7 @@ struct Ros2Backend {
   using TypedPublisher = bievr::TypedPublisher;
   using PointCloud2 = sensor_msgs::msg::PointCloud2;
   using Odometry = nav_msgs::msg::Odometry;
+  using PoseStamped = geometry_msgs::msg::PoseStamped;
   using Vector3Stamped = geometry_msgs::msg::Vector3Stamped;
   using TransformStamped = geometry_msgs::msg::TransformStamped;
 

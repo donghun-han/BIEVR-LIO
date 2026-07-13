@@ -157,6 +157,11 @@ struct Odometry {
   V3 angular_velocity;  // angular velocity expressed in the body frame
 };
 
+struct Pose {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  Transform pose;  // T_W_B (pose in the map/world frame)
+};
+
 template <typename PointT>
 inline PointcloudBase<PointT> operator*(const Transform& T, PointcloudBase<PointT> P) {
   P.points() = T * P.points().colwise().homogeneous();

@@ -55,6 +55,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'sensor_config',
+            default_value='mid360',
             description="Sensor config: a name (without .yaml) in config/sensor_configs/, "
                         "or an absolute path (starting with '/') to a config file."),
         DeclareLaunchArgument(

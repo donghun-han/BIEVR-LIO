@@ -180,6 +180,8 @@ inline void printConfigOverview(const Config& config) {
   os << "  log_path:             " << (hc.log_path.empty() ? "<none>" : hc.log_path) << "\n";
   os << "calibration (LiDAR -> IMU):\n";
   printExtrinsic(os, "T_I_L", hc.T_I_L);
+  os << "base_link (IMU -> base_link, from LiDAR mount):\n";
+  printExtrinsic(os, "T_B_I", hc.T_B_I);
   os << "==================================================";
   LOG(I, os.str());
 }
@@ -298,6 +300,29 @@ inline bool loadConfigFromYaml(const std::vector<std::string>& yaml_paths, Confi
           yaml.get<std::vector<double>>("calibration", "translation", {}),
           yaml.get<std::vector<double>>("calibration", "rotation", {}), "calibration", hc.T_I_L)) {
     return false;
+  }
+
+  // --- base_link (LiDAR mount on the vehicle), optional ---
+  // LiDAR pose in base_link: translation [m] + roll/pitch/yaw [deg] (fixed-axis
+  // X-Y-Z, same as SDF/URDF). Used only for the PX4 vision pose:
+  // T_B_I = T_B_L * T_I_L^-1. Absent section = identity (IMU is the vehicle frame).
+  {
+    const auto t_vec = yaml.get<std::vector<double>>("base_link", "translation", {});
+    const auto rpy = yaml.get<std::vector<double>>("base_link", "rpy_deg", {});
+    if (!t_vec.empty() || !rpy.empty()) {
+      if (t_vec.size() != 3 || rpy.size() != 3) {
+        LOG(E, "Config error: base_link needs 'translation' (3) and 'rpy_deg' (3), got "
+                   << t_vec.size() << " and " << rpy.size() << ".");
+        return false;
+      }
+      constexpr double kDeg2Rad = M_PI / 180.0;
+      const Rotation R_B_L = (Eigen::AngleAxisd(rpy[2] * kDeg2Rad, V3::UnitZ()) *
+                              Eigen::AngleAxisd(rpy[1] * kDeg2Rad, V3::UnitY()) *
+                              Eigen::AngleAxisd(rpy[0] * kDeg2Rad, V3::UnitX()))
+                                 .toRotationMatrix();
+      const Transform T_B_L(R_B_L, V3(t_vec[0], t_vec[1], t_vec[2]));
+      hc.T_B_I = Transform(T_B_L * hc.T_I_L.inverse());
+    }
   }
 
   // --- threading (top-level, process-wide) ---

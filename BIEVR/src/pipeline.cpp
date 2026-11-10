@@ -367,7 +367,9 @@ void Pipeline::publishLatestState(const Header& header) {
   odom.linear_velocity = latest_state.quat.conjugate() * latest_state.v;
   odom.angular_velocity = latest_gyro_;
   publish(odom, header, "odom", config_.body_frame);
-  publish(Pose{odom.pose}, header, "/mavros/vision_pose/pose");
+  // PX4 expects the vehicle (base_link) pose, not the IMU pose:
+  // T_W_B = T_W_I * T_I_B. Identity T_B_I keeps the IMU pose.
+  publish(Pose{Transform(odom.pose * config_.T_B_I.inverse())}, header, "/mavros/vision_pose/pose");
   publish(acc_bias_, header, "bias/acc");
   publish(gyro_bias_, header, "bias/gyro");
 }
